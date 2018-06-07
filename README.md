@@ -16,7 +16,7 @@ Esse projeto trata-se de um estudo sobre Descrição de Conteúdo Audiovisual/An
 *Pegue uma chave da API de visão computacional, e atribua essa chave como valor da variável subscriptionKey
  presente na linha 12 do código do projeto.
 
-
+# Sobre
 Disciplina de Multimídia e Hipermídia do CEULP/ULBRA - 2018/1
 Professor: Jackson Gomes
 
