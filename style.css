@@ -1,0 +1,32 @@
+body{
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 1.0em;
+    background: #fceabb;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to right, #f8b500, #fceabb);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to right, #f8b500, #fceabb); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+}
+
+.container-fluid{
+    width: 1000px;
+    background-color: white;
+    margin: 0 auto;
+}
+
+button{
+    margin-bottom: 10px;
+}
+
+#imageDiv{
+    margin-top: 40px !important;
+    padding: 20px;
+    display: block;
+    align-content: center;
+}
+
+#sourceImage{
+    display: inline-block;
+    margin-left: 20px;
+}
+

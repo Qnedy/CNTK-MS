@@ -1,48 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Detect Faces Sample</title>
+    
+    <title>CNTK - MS</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
 
 <script type="text/javascript">
     function processImage() {
-        // Replace <Subscription Key> with your valid subscription key.
-        var subscriptionKey = "4bee2d04c6b44ff0b5a75e58eb415dfc";
 
-        // NOTE: You must use the same region in your REST call as you used to
-        // obtain your subscription keys. For example, if you obtained your
-        // subscription keys from westus, replace "westcentralus" in the URL
-        // below with "westus".
+        // **********************************************
+        // *** Update or verify the following values. ***
+        // **********************************************
+
+        // Replace <Subscription Key> with your valid subscription key.
+        var subscriptionKey = "386e1165a5254b1b9479d489705eb5a9";
+
+        // You must use the same region in your REST call as you used to get your
+        // subscription keys. For example, if you got your subscription keys from
+        // westus, replace "westcentralus" in the URI below with "westus".
         //
         // Free trial subscription keys are generated in the westcentralus region.
-        // If you use a free trial subscription key, you shouldn't need to change 
+        // If you use a free trial subscription key, you shouldn't need to change
         // this region.
         var uriBase =
-            "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
+            "https://westcentralus.api.cognitive.microsoft.com/vision/v2.0/analyze";
 
         // Request parameters.
         var params = {
-            "returnFaceId": "true",
-            "returnFaceLandmarks": "false",
-            "returnFaceAttributes":
-                "age,gender,headPose,smile,facialHair,glasses,emotion," +
-                "hair,makeup,occlusion,accessories,blur,exposure,noise"
+            "visualFeatures": "Categories,Description,Color",
+            "details": "",
+            "language": "en",
         };
 
         // Display the image.
         var sourceImageUrl = document.getElementById("inputImage").value;
         document.querySelector("#sourceImage").src = sourceImageUrl;
 
-        // Perform the REST API call.
+        // Make the REST API call.
         $.ajax({
             url: uriBase + "?" + $.param(params),
 
             // Request headers.
             beforeSend: function(xhrObj){
                 xhrObj.setRequestHeader("Content-Type","application/json");
-                xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
+                
+                xhrObj.setRequestHeader(
+                    "Ocp-Apim-Subscription-Key", subscriptionKey);
+                    
             },
 
             type: "POST",
@@ -53,43 +64,123 @@
 
         .done(function(data) {
             // Show formatted JSON on webpage.
+            
+            var teste = JSON.stringify(data, null, 2);
+            var testeToJson = $.parseJSON(teste);
+            
+            //console.log(testeToJson);
+            //console.log(testeToJson.categories[0].name);
+            //console.log(testeToJson.description.captions[0].text);
+            //console.log(testeToJson.description.tags);
+
+            var nivelConfiabilidade = testeToJson.description.captions[0].confidence
+
+            $('#imageDiv').append("<h1>" + testeToJson.description.captions[0].text + "</h1>");
+
+            $('#imageDiv').append("<p>" + testeToJson.description.tags.slice(-17) + "</p>");
+
+            $('#metadata').append("<h2>" + testeToJson.metadata.format + "</h2>");
+            
+
+            if(testeToJson.categories[0].detail){
+                if(testeToJson.categories[0].detail.celebrities.length >0){
+                $('#imageDiv').append("<img src='img/celebridade-icone.png'/>");
+            };
+            };
+
+             $('#imageDiv').append("Metadados:");
+
+            if(testeToJson.metadata.format == "Jpeg"){
+                $('#imageDiv').append("<img src='img/jpeg.png'/>");
+                
+            }else if (testeToJson.metadata.format == "Jpg"){
+                $('#imageDiv').append("<img src='img/jpg.png'/>");
+            }else if(testeToJson.metadata.format == "Png"){
+                $('#imageDiv').append("<img src='img/png.png'/>");
+            }
+
+           
+
+            $('#imageDiv').append("<img src='img/largura.png'/>" + testeToJson.metadata.width + "px");
+            $('#imageDiv').append("<img src='img/altura.png'/>" + testeToJson.metadata.height + "px");
+
+            var ctx = document.getElementById("myChart").getContext('2d');
+
+
+            var myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ["Confiável", "Não Confiável"],
+                    datasets: [{
+                        label: '# Confiabilidade das informações',
+                        data: [nivelConfiabilidade, 1-nivelConfiabilidade],
+                        backgroundColor: [
+                            'rgba(0,255,0, 0.5)',
+                            'rgba(54, 162, 235, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(0,255,0,1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true,
+                            }
+                        }]
+                    }
+                }
+            });
+
             $("#responseTextArea").val(JSON.stringify(data, null, 2));
         })
 
         .fail(function(jqXHR, textStatus, errorThrown) {
             // Display error message.
-            var errorString = (errorThrown === "") ?
-                "Error. " : errorThrown + " (" + jqXHR.status + "): ";
-            errorString += (jqXHR.responseText === "") ?
-                "" : (jQuery.parseJSON(jqXHR.responseText).message) ?
-                    jQuery.parseJSON(jqXHR.responseText).message :
-                        jQuery.parseJSON(jqXHR.responseText).error.message;
+            var errorString = (errorThrown === "") ? "Error. " :
+                errorThrown + " (" + jqXHR.status + "): ";
+            errorString += (jqXHR.responseText === "") ? "" :
+                jQuery.parseJSON(jqXHR.responseText).message;
             alert(errorString);
         });
+    
     };
 </script>
 
-<h1>Detect Faces:</h1>
-Enter the URL to an image that includes a face or faces, then click
-the <strong>Analyze face</strong> button.<br><br>
-
-Image to analyze: <input type="text" name="inputImage" id="inputImage"
-value="https://upload.wikimedia.org/wikipedia/commons/c/c3/RH_Louise_Lillian_Gish.jpg" />
-
-<button onclick="processImage()">Analyze face</button><br><br>
-
-<div id="wrapper" style="width:1020px; display:table;">
+<!--<div id="wrapper" class="container-fluid" style="display:table;">
     <div id="jsonOutput" style="width:600px; display:table-cell;">
-        Response:<br><br>
-
+        Análise:
+        <br><br>
         <textarea id="responseTextArea" class="UIInput"
                   style="width:580px; height:400px;"></textarea>
     </div>
-    <div id="imageDiv" style="width:420px; display:table-cell;">
-        Source image:<br><br>
+    
+</div>-->
 
-        <img id="sourceImage" width="400" />
+<div class="container-fluid">
+    <div class="row">
+        <div id="imageDiv" class="col-md-12">
+                <h1>Analisando uma imagem com CNTK</h1>
+                <p>Congnitive ToolKit - Microsoft</p>
+                <br>
+                <p>Insira a URL da imagem que deseja analisar, depois clique no botão <strong>Analyze image</strong>.<br>
+                Atualize a página sempre que for analisar uma imagem nova</p>
+                <br>
+                Imagem para analisar:
+                <input type="text" name="inputImage" id="inputImage"
+                    value="https://pbs.twimg.com/profile_images/988775660163252226/XpgonN0X_400x400.jpg" />
+                <button id="btn-teste" class="btn btn-success" onclick="processImage()">Analyze image</button>
+            <img id="sourceImage" width="400" />
+            <div style="position:relative; top:60px; left:10px; width:500px; height:300px; margin: 0 auto">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
+    
 </body>
 </html>
